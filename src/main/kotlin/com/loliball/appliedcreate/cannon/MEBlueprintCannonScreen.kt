@@ -111,7 +111,7 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
         viewMaterialsButton.withCallback<IconButton> {
             showingMaterials = !showingMaterials
             if (showingMaterials) {
-                menu.contentHolder.dontUpdateChecklist = false
+                PacketDistributor.sendToServer(RequestCannonMaterialsPayload(0, true))
             }
         }
         viewMaterialsButton.setToolTip(Component.translatable("gui.appliedcreate.me_blueprint_cannon.viewMaterials"))
@@ -307,7 +307,9 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
         graphics.drawString(font, title, x + (BG_TOP.width - 8 - font.width(title)) / 2, y + 2, 0x505050, false)
 
 
-        val msg = CreateLang.translateDirect("schematicannon.status." + be.statusMsg)
+        val msg = if (be.statusMsg in setOf("noAEPower", "crafting", "outputFull", "unsafeData", "finishing"))
+            Component.translatable("gui.appliedcreate.me_blueprint_cannon.status.${be.statusMsg}")
+        else CreateLang.translateDirect("schematicannon.status." + be.statusMsg)
         var stringWidth = font.width(msg)
 
         if (be.missingItem != null) {
@@ -326,9 +328,6 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
         }
 
 
-        if (showingMaterials) {
-            renderMaterialChecklist(graphics, x, y)
-        }
     }
 
     private fun renderUpgradePanel(graphics: GuiGraphics, panelX: Int, panelY: Int) {
@@ -366,38 +365,35 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
     }
 
     private fun renderMaterialChecklist(graphics: GuiGraphics, guiX: Int, guiY: Int) {
-        val be = menu.contentHolder
-        val checklist = be.checklist
-
-        val overlayX = guiX + 8
-        val overlayY = guiY + 16
-        val overlayW = 197
-        val overlayH = 120
-        graphics.fill(overlayX, overlayY, overlayX + overlayW, overlayY + overlayH, 0xDD000000.toInt())
-
-        val titleText = Component.translatable("gui.appliedcreate.me_blueprint_cannon.materials").withStyle(ChatFormatting.WHITE)
-        graphics.drawString(font, titleText, overlayX + 4, overlayY + 4, 0xFFFFFF)
-
-        var lineY = overlayY + 16
-        val maxLines = 7
-        var lineCount = 0
-
-        for ((key, value) in checklist.required) {
-            if (lineCount >= maxLines) {
-                graphics.drawString(font, "...", overlayX + 4, lineY, 0xAAAAAA)
-                break
-            }
-            val gathered = checklist.gathered.getOrDefault(key, 0)
-            val color = if (gathered >= value) 0x55FF55 else 0xFF5555
-            val text = "${key.descriptionId.substringAfterLast('.')}: $gathered / $value"
-            graphics.drawString(font, text, overlayX + 4, lineY, color)
-            lineY += 11
-            lineCount++
+        val snapshot = menu.materialSnapshot
+        val x = guiX + 5
+        val y = guiY + 15
+        graphics.fill(x, y, x + 204, y + 127, 0xFA20242B.toInt())
+        graphics.drawString(font, Component.translatable("gui.appliedcreate.me_blueprint_cannon.materials"), x + 4, y + 4, 0xFFFFFF)
+        graphics.drawString(font, "×", x + 193, y + 4, 0xFFFFFF)
+        if (snapshot == null || snapshot.loading) {
+            graphics.drawString(font, Component.translatable("gui.appliedcreate.me_blueprint_cannon.loading"), x + 4, y + 24, 0xAAAAAA)
+            return
         }
-
-        if (checklist.required.isEmpty()) {
-            graphics.drawString(font, Component.translatable("gui.appliedcreate.me_blueprint_cannon.noMaterials").withStyle(ChatFormatting.GRAY), overlayX + 4, lineY, 0xAAAAAA)
+        for ((index, row) in snapshot.rows.withIndex()) {
+            val rowY = y + 16 + index * 13
+            graphics.pose().pushPose()
+            graphics.pose().translate((x + 4).toFloat(), rowY.toFloat(), 0f)
+            graphics.pose().scale(0.75f, 0.75f, 1f)
+            graphics.renderItem(row.stack, 0, 0)
+            graphics.pose().popPose()
+            val amount = "${row.available}/${row.required}" + if (row.damage) "*" else ""
+            val text = font.plainSubstrByWidth(row.stack.hoverName.string, 166 - font.width(amount))
+            graphics.drawString(font, text, x + 18, rowY + 2, 0xDDDDDD)
+            graphics.drawString(font, amount, x + 198 - font.width(amount), rowY + 2,
+                if (row.available >= row.required) 0x55FF55 else 0xFF7777)
         }
+        if (snapshot.rows.isEmpty()) graphics.drawString(font,
+            Component.translatable("gui.appliedcreate.me_blueprint_cannon.noMaterials"), x + 4, y + 25, 0xAAAAAA)
+        val footer = "‹  ${snapshot.page + 1}/${snapshot.pages}  ›"
+        graphics.drawString(font, footer, x + 76, y + 114, 0xFFFFFF)
+        graphics.drawString(font, "↻", x + 187, y + 114, 0xFFFFFF)
+        if (snapshot.incomplete) graphics.drawString(font, "!", x + 4, y + 114, 0xFFAA00)
     }
 
     private fun renderBlueprintHighlight(graphics: GuiGraphics, x: Int, y: Int) {
@@ -412,7 +408,21 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
 
     override fun renderForeground(graphics: GuiGraphics, mouseX: Int, mouseY: Int, partialTicks: Float) {
         val be = menu.contentHolder
-
+        if (showingMaterials) {
+            graphics.pose().pushPose()
+            graphics.pose().translate(0f, 0f, 400f)
+            renderMaterialChecklist(graphics, leftPos, topPos)
+            val row = (mouseY - (topPos + 31)) / 13
+            val snapshot = menu.materialSnapshot
+            if (mouseX in leftPos + 9..leftPos + 203 && mouseY >= topPos + 31 && row in 0..6) {
+                snapshot?.rows?.getOrNull(row)?.let { graphics.renderTooltip(font, it.stack, mouseX, mouseY) }
+            }
+            if (mouseY in topPos + 124..topPos + 142 && mouseX in leftPos + 5..leftPos + 72) {
+                graphics.renderTooltip(font, Component.translatable("gui.appliedcreate.me_blueprint_cannon.checklistHelp"), mouseX, mouseY)
+            }
+            graphics.pose().popPose()
+            return
+        }
 
         if (hoveredSlot != null && !hoveredSlot!!.hasItem()) {
             if (hoveredSlot!!.index == 0)
@@ -435,20 +445,35 @@ class MEBlueprintCannonScreen(menu: MEBlueprintCannonMenu, inventory: Inventory,
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (showingMaterials && button == 0) {
-            val x = leftPos
-            val y = topPos
-            val overlayX = x + 8
-            val overlayY = y + 16
-            val overlayW = 197
-            val overlayH = 120
-            if (mouseX < overlayX || mouseX > overlayX + overlayW || mouseY < overlayY || mouseY > overlayY + overlayH) {
-                if (!viewMaterialsButton.isMouseOver(mouseX, mouseY)) {
-                    showingMaterials = false
+        if (showingMaterials) {
+            if (button == 0) {
+                val x = mouseX - leftPos - 5
+                val y = mouseY - topPos - 15
+                if (x !in 0.0..204.0 || y !in 0.0..127.0 || (x >= 188 && y < 16)) showingMaterials = false
+                else if (y >= 109) {
+                    val snapshot = menu.materialSnapshot
+                    when {
+                        x >= 181 -> PacketDistributor.sendToServer(RequestCannonMaterialsPayload(snapshot?.page ?: 0, true))
+                        x < 99 -> changeMaterialPage(-1)
+                        else -> changeMaterialPage(1)
+                    }
                 }
             }
+            return true // The checklist must never click through into inventory slots or build controls.
         }
         return super.mouseClicked(mouseX, mouseY, button)
+    }
+
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        if (!showingMaterials) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
+        if (scrollY != 0.0) changeMaterialPage(if (scrollY > 0) -1 else 1)
+        return true
+    }
+
+    private fun changeMaterialPage(delta: Int) {
+        val snapshot = menu.materialSnapshot ?: return
+        val page = (snapshot.page + delta).coerceIn(0, snapshot.pages - 1)
+        if (page != snapshot.page) PacketDistributor.sendToServer(RequestCannonMaterialsPayload(page, false))
     }
 
     private fun sendOptionUpdate(option: ConfigureMECannonPayload.Option, set: Boolean) {

@@ -63,7 +63,7 @@
     "block.appliedcreate.whichball_skin_doll": "Whichball Skin Doll",
 
     "gui.appliedcreate.me_blueprint_cannon.viewMaterials": "View Materials",
-    "gui.appliedcreate.me_blueprint_cannon.materials": "Material Checklist",
+    "gui.appliedcreate.me_blueprint_cannon.materials": "Remaining Materials",
     "gui.appliedcreate.me_blueprint_cannon.noMaterials": "No materials required",
 
     "block.appliedcreate.spatial_assembler": "Spatial Assembler",
@@ -105,5 +105,12 @@
     "gui.appliedcreate.MEGearbox.automatic_import": "Automatically collect surplus",
     "gui.appliedcreate.MEGearbox.automatic_stress": "Stress: automatic",
     "gui.appliedcreate.MEGearbox.offline": "ME network offline",
-    "gui.appliedcreate.MEGearbox.transfer": "Transfer: %s SU/t"
+    "gui.appliedcreate.MEGearbox.transfer": "Transfer: %s SU/t",
+    "gui.appliedcreate.me_blueprint_cannon.loading": "Scanning schematic…",
+    "gui.appliedcreate.me_blueprint_cannon.checklistHelp": "Scroll or use arrows to change pages. ↻ refreshes requirements. * means tool durability. ! means unloaded or invalid targets.",
+    "gui.appliedcreate.me_blueprint_cannon.status.noAEPower": "ME offline / insufficient AE",
+    "gui.appliedcreate.me_blueprint_cannon.status.crafting": "Waiting for ME crafting",
+    "gui.appliedcreate.me_blueprint_cannon.status.outputFull": "Remove empty schematic",
+    "gui.appliedcreate.me_blueprint_cannon.status.unsafeData": "Invalid schematic item data",
+    "gui.appliedcreate.me_blueprint_cannon.status.finishing": "Waiting for blocks to land"
 }

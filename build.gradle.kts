@@ -47,7 +47,7 @@ neoForge {
             type = "gameTestServer"
             sourceSet = gameTest
             gameDirectory = file("run-gametest")
-            systemProperty("neoforge.enabledGameTestNamespaces", "appliedcreate_stress,appliedcreate_compat")
+            systemProperty("neoforge.enabledGameTestNamespaces", "appliedcreate_stress,appliedcreate_compat,appliedcreate_cannon")
         }
     }
 }

@@ -20,6 +20,10 @@ Pattern providers designed for Create's Mechanical Crafters. Place one adjacent 
 - **Brass Pattern Provider** — 36 pattern slots (extended), upgradeable from Andesite variant
 - Available as both full blocks and cable-bus parts
 
+### ME Blueprint Cannon
+
+Build deployed Create schematics using ME materials, with acceleration and crafting cards, missing-material waits, a paged material checklist, and saved construction progress. Rebuilds ME cables, parts and facades, restoring memory-card filters and settings. Encoded patterns cost one blank pattern each; upgrades cost their item type and count. Blueprint pattern and upgrade components are validated before payment; ordinary inventories and return buffers are never copied.
+
 ### Stress P2P Tunnel
 
 Transmit Create's rotational stress (speed + torque) through AE2 P2P tunnels.

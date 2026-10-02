@@ -20,7 +20,9 @@ data class ConfigureMECannonPayload(val option: Option, val set: Boolean) : Cust
         val TYPE = CustomPacketPayload.Type<ConfigureMECannonPayload>(ResourceLocation.fromNamespaceAndPath(AppliedCreate.MOD_ID, "configure_me_cannon"))
 
         val STREAM_CODEC: StreamCodec<ByteBuf, ConfigureMECannonPayload> = StreamCodec.composite(
-            StreamCodec.of({ buf: ByteBuf, value: Option -> buf.writeByte(value.ordinal) }, { buf: ByteBuf -> Option.entries[buf.readByte().toInt()] }) as StreamCodec<ByteBuf, Option>, { it.option },
+            StreamCodec.of({ buf: ByteBuf, value: Option -> buf.writeByte(value.ordinal) }, { buf: ByteBuf ->
+                Option.entries.getOrNull(buf.readUnsignedByte().toInt()) ?: throw io.netty.handler.codec.DecoderException("Invalid cannon option")
+            }) as StreamCodec<ByteBuf, Option>, { it.option },
             net.minecraft.network.codec.ByteBufCodecs.BOOL, { it.set },
             ::ConfigureMECannonPayload
         )
@@ -30,6 +32,7 @@ data class ConfigureMECannonPayload(val option: Option, val set: Boolean) : Cust
         context.enqueueWork {
             val player = context.player()
             if (player.containerMenu is MEBlueprintCannonMenu) {
+                if (!player.containerMenu.stillValid(player)) return@enqueueWork
                 val be = (player.containerMenu as MEBlueprintCannonMenu).contentHolder
                 when (option) {
                     Option.DONT_REPLACE, Option.REPLACE_ANY, Option.REPLACE_EMPTY, Option.REPLACE_SOLID ->
@@ -39,19 +42,18 @@ data class ConfigureMECannonPayload(val option: Option, val set: Boolean) : Cust
                     Option.SKIP_BLOCK_ENTITIES ->
                         be.replaceBlockEntities = set
                     Option.PLAY -> {
-                        be.state = SchematicannonBlockEntity.State.RUNNING
-                        be.statusMsg = "running"
+                        be.startPrinting()
                     }
                     Option.PAUSE -> {
-                        be.state = SchematicannonBlockEntity.State.PAUSED
-                        be.statusMsg = "paused"
+                        be.pausePrinting()
                     }
                     Option.STOP -> {
-                        be.state = SchematicannonBlockEntity.State.STOPPED
-                        be.statusMsg = "stopped"
+                        be.stopPrinting()
                     }
                 }
                 be.sendUpdate = true
+                be.setChanged()
+                if (option.ordinal < Option.PLAY.ordinal) be.requestChecklist()
             }
         }
     }

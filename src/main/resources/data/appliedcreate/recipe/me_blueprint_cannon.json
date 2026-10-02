@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " F ",
+    "CSC",
+    " E "
+  ],
+  "key": {
+    "F": {
+      "item": "ae2:formation_core"
+    },
+    "C": {
+      "item": "ae2:fluix_glass_cable"
+    },
+    "S": {
+      "item": "create:schematicannon"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    }
+  },
+  "result": {
+    "id": "appliedcreate:me_blueprint_cannon",
+    "count": 1
+  }
+}

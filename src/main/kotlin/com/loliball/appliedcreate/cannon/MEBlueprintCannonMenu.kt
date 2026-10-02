@@ -9,8 +9,13 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.item.ItemStack
 import net.neoforged.neoforge.items.SlotItemHandler
+import net.minecraft.server.level.ServerPlayer
+import net.neoforged.neoforge.network.PacketDistributor
 
 class MEBlueprintCannonMenu : MenuBase<MEBlueprintCannonBlockEntity> {
+    var materialPage = 0
+    var materialSnapshot: CannonMaterialsPayload? = null
+    private var syncTicks = 0
 
     constructor(type: MenuType<*>, id: Int, inv: Inventory, buffer: RegistryFriendlyByteBuf) : super(type, id, inv, buffer)
 
@@ -44,6 +49,24 @@ class MEBlueprintCannonMenu : MenuBase<MEBlueprintCannonBlockEntity> {
 
     override fun saveData(contentHolder: MEBlueprintCannonBlockEntity) {}
 
+    override fun stillValid(player: Player): Boolean = !contentHolder.isRemoved &&
+        player.level() === contentHolder.level && player.level().getBlockEntity(contentHolder.blockPos) === contentHolder &&
+        player.distanceToSqr(contentHolder.blockPos.x + 0.5, contentHolder.blockPos.y + 0.5, contentHolder.blockPos.z + 0.5) <= 64
+
+    override fun broadcastChanges() {
+        super.broadcastChanges()
+        if (++syncTicks % 10 == 0) sendMaterials()
+    }
+
+    fun sendMaterials() {
+        val serverPlayer = player as? ServerPlayer ?: return
+        val be = contentHolder
+        val pages = maxOf(1, (be.materials.size + 6) / 7)
+        materialPage = materialPage.coerceIn(0, pages - 1)
+        PacketDistributor.sendToPlayer(serverPlayer, CannonMaterialsPayload(containerId, be.blockPos, materialPage,
+            pages, be.checklistLoading, be.checklistIncomplete, be.materialPage(materialPage)))
+    }
+
     override fun createOnClient(extraData: RegistryFriendlyByteBuf): MEBlueprintCannonBlockEntity? {
         val level = Minecraft.getInstance().level ?: return null
         val pos = extraData.readBlockPos()
@@ -56,20 +79,24 @@ class MEBlueprintCannonMenu : MenuBase<MEBlueprintCannonBlockEntity> {
     }
 
     override fun quickMoveStack(playerIn: Player, index: Int): ItemStack {
+        if (index !in slots.indices) return ItemStack.EMPTY
         val clickedSlot = getSlot(index)
         if (!clickedSlot.hasItem()) return ItemStack.EMPTY
         val stack = clickedSlot.item
+        val original = stack.copy()
 
         if (index < 7) {
             // Container slots (0-1 inventory, 2-6 upgrades) -> player inventory
-            moveItemStackTo(stack, 7, slots.size, true)
+            if (!moveItemStackTo(stack, 7, slots.size, true)) return ItemStack.EMPTY
         } else {
             // Player inventory -> try blueprint slot first, then upgrade slots
             if (!moveItemStackTo(stack, 0, 1, false)) {
-                moveItemStackTo(stack, 2, 7, false)
+                if (!moveItemStackTo(stack, 2, 7, false)) return ItemStack.EMPTY
             }
         }
 
-        return ItemStack.EMPTY
+        if (stack.isEmpty) clickedSlot.set(ItemStack.EMPTY) else clickedSlot.setChanged()
+        clickedSlot.onTake(playerIn, stack)
+        return original
     }
 }

@@ -1,10 +1,12 @@
 package com.loliball.appliedcreate
 
-// [HIDDEN] Blueprint Cannon & Spatial Assembler — registrations kept for compilation, hidden from creative tab/recipes
+// Blueprint Cannon is available; Spatial Assembler remains hidden from creative tab/recipes.
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonBlock
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonBlockEntity
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonMenu
 import com.loliball.appliedcreate.cannon.ConfigureMECannonPayload
+import com.loliball.appliedcreate.cannon.CannonMaterialsPayload
+import com.loliball.appliedcreate.cannon.RequestCannonMaterialsPayload
 import com.loliball.appliedcreate.config.ACConfig
 import com.loliball.appliedcreate.spatial.SpatialAssemblerBlock
 import com.loliball.appliedcreate.spatial.SpatialAssemblerBlockEntity
@@ -188,7 +190,7 @@ class AppliedCreate {
             .register()
 
         // ──────────────────────────────────────────────────────────────
-        //  ME Blueprint Cannon  [HIDDEN] — registered but not in creative tab/recipes
+        //  ME Blueprint Cannon
         // ──────────────────────────────────────────────────────────────
         val ME_BLUEPRINT_CANNON_BLOCK: BlockEntry<MEBlueprintCannonBlock> = REGISTRATE
             .block("me_blueprint_cannon") { props ->
@@ -405,7 +407,7 @@ class AppliedCreate {
                     output.accept(BRASS_PATTERN_PROVIDER_PART_ITEM.get())
                     output.accept(BRASS_PATTERN_PROVIDER_UPGRADE_ITEM.get())
                     output.accept(STRESS_P2P_TUNNEL_PART_ITEM.get())
-                    // output.accept(ME_BLUEPRINT_CANNON_BLOCK.asStack())  // [HIDDEN]
+                    output.accept(ME_BLUEPRINT_CANNON_BLOCK.asStack())
                     output.accept(KINETIC_ENERGY_ACCEPTOR_BLOCK.asStack())
                     output.accept(ME_GEARBOX_BLOCK.asStack())
                     output.accept(WHICHBALL_SKIN_DOLL_BLOCK.asStack())
@@ -530,7 +532,7 @@ class AppliedCreate {
                 AEKeyTypes.register(StressKeyType.TYPE)
             }
         }
-        // [HIDDEN] Blueprint Cannon network payload — registered for compilation, block hidden from creative tab
+        // Blueprint Cannon network payload
         bus.addListener { event: RegisterPayloadHandlersEvent ->
             val registrar = event.registrar(MOD_ID)
             registrar.playToServer(
@@ -538,6 +540,8 @@ class AppliedCreate {
                 ConfigureMECannonPayload.STREAM_CODEC,
                 ConfigureMECannonPayload::handle
             )
+            registrar.playToServer(RequestCannonMaterialsPayload.TYPE, RequestCannonMaterialsPayload.STREAM_CODEC, RequestCannonMaterialsPayload::handle)
+            registrar.playToClient(CannonMaterialsPayload.TYPE, CannonMaterialsPayload.STREAM_CODEC, CannonMaterialsPayload::handle)
         }
 
         // Register part models manually since Kotlin companion object @PartModels annotations
@@ -610,7 +614,7 @@ class AppliedCreate {
             BRASS_PATTERN_PROVIDER_BE.get(),
             BRASS_PATTERN_PROVIDER_BLOCK.asItem()
         )
-        // [HIDDEN] Blueprint Cannon
+        // Blueprint Cannon
         AEBaseBlockEntity.registerBlockEntityItem(
             ME_BLUEPRINT_CANNON_BE.get(),
             ME_BLUEPRINT_CANNON_BLOCK.asItem()
@@ -673,7 +677,7 @@ class AppliedCreate {
                 ME_GEARBOX_BLOCK.get(), { 0.0 }
             )
 
-            // [HIDDEN] Blueprint Cannon upgrade cards
+            // Blueprint Cannon upgrade cards
             Upgrades.add(AEItems.SPEED_CARD, ME_BLUEPRINT_CANNON_BLOCK.asItem(), 4)
             Upgrades.add(AEItems.CRAFTING_CARD, ME_BLUEPRINT_CANNON_BLOCK.asItem(), 1)
 
@@ -693,7 +697,7 @@ class AppliedCreate {
             BRASS_PATTERN_PROVIDER_BE.get()
         ) { be, _ -> be }
 
-        // [HIDDEN] Blueprint Cannon
+        // Blueprint Cannon
         event.registerBlockEntity(
             AECapabilities.IN_WORLD_GRID_NODE_HOST,
             ME_BLUEPRINT_CANNON_BE.get()

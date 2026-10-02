@@ -63,7 +63,7 @@
     "block.appliedcreate.whichball_skin_doll": "小萝卜",
 
     "gui.appliedcreate.me_blueprint_cannon.viewMaterials": "查看材料",
-    "gui.appliedcreate.me_blueprint_cannon.materials": "材料清单",
+    "gui.appliedcreate.me_blueprint_cannon.materials": "剩余材料清单",
     "gui.appliedcreate.me_blueprint_cannon.noMaterials": "无需材料",
 
     "block.appliedcreate.spatial_assembler": "空间装配器",
@@ -105,5 +105,12 @@
     "gui.appliedcreate.MEGearbox.automatic_import": "自动收取剩余应力",
     "gui.appliedcreate.MEGearbox.automatic_stress": "应力：自动分配",
     "gui.appliedcreate.MEGearbox.offline": "ME 网络未就绪",
-    "gui.appliedcreate.MEGearbox.transfer": "传输：%s SU/t"
+    "gui.appliedcreate.MEGearbox.transfer": "传输：%s SU/t",
+    "gui.appliedcreate.me_blueprint_cannon.loading": "正在扫描蓝图…",
+    "gui.appliedcreate.me_blueprint_cannon.checklistHelp": "滚轮或箭头翻页，↻ 刷新需求。* 表示工具耐久；! 表示目标未加载或数据无效。",
+    "gui.appliedcreate.me_blueprint_cannon.status.noAEPower": "ME 未就绪或 AE 能量不足",
+    "gui.appliedcreate.me_blueprint_cannon.status.crafting": "等待 ME 自动合成",
+    "gui.appliedcreate.me_blueprint_cannon.status.outputFull": "请取出空白蓝图",
+    "gui.appliedcreate.me_blueprint_cannon.status.unsafeData": "蓝图物品数据不合法",
+    "gui.appliedcreate.me_blueprint_cannon.status.finishing": "等待方块落地"
 }

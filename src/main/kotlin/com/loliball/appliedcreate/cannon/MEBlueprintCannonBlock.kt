@@ -49,20 +49,18 @@ class MEBlueprintCannonBlock(properties: Properties) : Block(properties), IBE<ME
         return InteractionResult.SUCCESS
     }
 
-    override fun neighborChanged(state: BlockState, worldIn: Level, pos: BlockPos, blockIn: Block, fromPos: BlockPos, isMoving: Boolean) {
-        withBlockEntityDo(worldIn, pos) { be -> be.neighbourCheckCooldown = 0 }
-    }
-
     override fun onRemove(state: BlockState, worldIn: Level, pos: BlockPos, newState: BlockState, isMoving: Boolean) {
         if (!state.hasBlockEntity() || state.block == newState.block) {
             return
         }
 
         withBlockEntityDo(worldIn, pos) { be ->
+            if (worldIn.isClientSide) return@withBlockEntityDo
             // Drop main inventory
             ItemHelper.dropContents(worldIn, pos, be.inventory)
             // Drop upgrades
             ItemHelper.dropContents(worldIn, pos, be.upgradeInventory.toItemHandler())
+            be.dropBufferedItems()
         }
         worldIn.removeBlockEntity(pos)
     }

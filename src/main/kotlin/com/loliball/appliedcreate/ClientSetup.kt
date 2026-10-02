@@ -3,7 +3,7 @@ package com.loliball.appliedcreate
 import com.loliball.appliedcreate.storage.StressKeyRenderHandler
 import com.loliball.appliedcreate.patternprovider.BrassPatternProviderMenu
 import com.loliball.appliedcreate.patternprovider.AndesitePatternProviderMenu
-// [HIDDEN] Blueprint Cannon & Spatial Assembler — registered for compilation, hidden from creative tab/recipes
+// Blueprint Cannon and Spatial Assembler client registrations.
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonMenu
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonRenderer
 import com.loliball.appliedcreate.cannon.MEBlueprintCannonScreen
@@ -72,7 +72,7 @@ object ClientSetup {
             },
             "/screens/appliedcreate/andesite_pattern_provider.json"
         )
-        // [HIDDEN] Blueprint Cannon & Spatial Assembler — screens registered for compilation
+        // Blueprint Cannon and Spatial Assembler screens
         event.register(
             AppliedCreate.ME_BLUEPRINT_CANNON_MENU.get(),
             ::MEBlueprintCannonScreen
